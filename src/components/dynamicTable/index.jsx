@@ -156,7 +156,35 @@ export default function PaginatedTable({
                 variant="body2"
                 sx={{ color: "#333", fontWeight: "500" }}
               >
-                {row.phone}
+                {row.phone || "N/A"}
+              </Typography>
+            </Box>
+          </TableCell>
+        );
+
+      case "completeAddress":
+        return (
+          <TableCell>
+            <Box
+              sx={{
+                textAlign: "left",
+                display: "flex",
+                flexDirection: "row",
+                gap: 1,
+              }}
+            >
+              <Typography
+                variant="body2"
+                sx={{
+                  color: "#333",
+                  fontWeight: "300",
+                  fontSize: "13px",
+                  lineHeight: 1.4,
+                  mb: 0.5,
+                }}
+              >
+                {row.address || "N/A"}{" "}
+                {[row.city, row.state, row.country].filter(Boolean).join(", ")}
               </Typography>
             </Box>
           </TableCell>
@@ -174,14 +202,76 @@ export default function PaginatedTable({
               }}
             >
               <CustomSwitch
-                checked={row.status === "Active"}
+                checked={row.status === "Active" || row.status === true}
                 onChange={(e) =>
                   handleStatusChange(
-                    row.id,
+                    row._id || row.id,
                     e.target.checked ? "Active" : "Inactive"
                   )
                 }
               />
+            </Box>
+          </TableCell>
+        );
+
+      case "interestRate":
+        return (
+          <TableCell>
+            <Typography
+              variant="body2"
+              sx={{
+                color: "#333",
+                fontWeight: "600",
+                fontSize: "14px",
+              }}
+            >
+              {row.interestRate || "N/A"}
+            </Typography>
+          </TableCell>
+        );
+
+      case "emailVerified":
+        return (
+          <TableCell>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Chip
+                label={row.emailVerified ? "Verified" : "Not Verified"}
+                size="small"
+                sx={{
+                  backgroundColor: row.emailVerified ? "#e8f5e8" : "#ffebee",
+                  color: row.emailVerified ? "#2e7d32" : "#d32f2f",
+                  fontWeight: "500",
+                  fontSize: "12px",
+                }}
+              />
+            </Box>
+          </TableCell>
+        );
+
+      case "createdAt":
+        return (
+          <TableCell>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 1,
+              }}
+            >
+              <Calendar size={16} color="#666" />
+              <Typography
+                variant="body2"
+                sx={{ color: "#333", fontWeight: "500" }}
+              >
+                {formatDate(row.createdAt || row.joinedDate)}
+              </Typography>
             </Box>
           </TableCell>
         );

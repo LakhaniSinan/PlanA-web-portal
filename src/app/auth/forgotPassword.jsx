@@ -6,6 +6,8 @@ import TextInput from "../../components/textInput";
 import CustomButton from "../../components/customButton";
 import loanImage from "../../assets/loan-vector-5.png";
 import { AUTH_STYLES } from "./styles";
+import { adminForgotPassword } from "../../api/Modules/auth";
+import { useSnackbar } from "notistack";
 
 const ForgotPassword = () => {
   const [formData, setFormData] = useState({
@@ -13,13 +15,15 @@ const ForgotPassword = () => {
   });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { enqueueSnackbar } = useSnackbar();
 
   const handleChange = (field) => (e) => {
     setFormData((prev) => ({ ...prev, [field]: e.target.value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!formData.email) {
@@ -27,14 +31,37 @@ const ForgotPassword = () => {
       return;
     }
 
-    console.log("Password reset requested for:", formData.email);
-
-    setSuccess("Email verified! Please set your new password.");
+    setLoading(true);
     setError("");
+    setSuccess("");
 
-    setTimeout(() => {
-      navigate("/set-new-password", { state: { email: formData.email } });
-    }, 1500);
+    try {
+      const response = await adminForgotPassword({
+        email: formData.email,
+      });
+
+      if (response?.status === 200 || response?.status === 201) {
+        enqueueSnackbar(response?.data?.message || "OTP sent to your email successfully", {
+          variant: "success",
+        });
+        setSuccess("Email verified! Please check your email for OTP.");
+        
+        setTimeout(() => {
+          navigate("/otp-verification", { state: { email: formData.email } });
+        }, 1500);
+      } else {
+        enqueueSnackbar(response?.data?.message || "Failed to send OTP", {
+          variant: "error",
+        });
+      }
+    } catch (error) {
+      console.error("Forgot password error:", error);
+      enqueueSnackbar(error?.response?.data?.message || "Failed to send OTP. Please try again.", {
+        variant: "error",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleBackToLogin = () => {
@@ -103,6 +130,7 @@ const ForgotPassword = () => {
               borderRadius={3}
               btnTextColor="#fff"
               isBorder={"1px solid #fff"}
+              disabled={loading}
             />
           </Box>
         </Box>

@@ -7,22 +7,28 @@ import CustomButton from "../../components/customButton";
 import loanImage from "../../assets/loan-vector-5.png";
 import { AUTH_STYLES } from "./styles";
 import logo from "../../assets/logo-app.png";
+import { adminLogin } from "../../api/Modules/auth";
+
+import { useSnackbar } from "notistack";
+import useAdminStore from "../../zustand/useAdminStore";
 
 const Login = () => {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
-    rememberMe: false,
   });
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const { enqueueSnackbar } = useSnackbar();
+  const { setAdminData } = useAdminStore();
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (field) => (e) => {
-    const value = field === "rememberMe" ? e.target.checked : e.target.value;
+    const value = e.target.value;
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!formData.email || !formData.password) {
@@ -30,22 +36,50 @@ const Login = () => {
       return;
     }
 
-    console.log("Login attempt:", formData);
-    navigate("/");
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await adminLogin({
+        email: formData.email,
+        password: formData.password,
+      });
+
+      if (response?.status === 200 || response?.status === 201) {
+        const adminData = response.data.data.admin;
+
+        localStorage.setItem("token", response.data.data.token);
+        enqueueSnackbar(response?.data?.message, {
+          variant: "success",
+        });
+        setAdminData(adminData);
+        console.log("Login Success:", adminData);
+        navigate("/");
+      } else {
+        enqueueSnackbar(response?.data?.message, {
+          variant: "error",
+        });
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      enqueueSnackbar(error?.response?.data?.message, {
+        variant: "error",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <Container maxWidth="lg" sx={AUTH_STYLES.container}>
       <Paper elevation={3} sx={AUTH_STYLES.paper}>
-        
         {/* Right Section - Illustration (Top on mobile) */}
         <Box sx={AUTH_STYLES.rightSection}>
-        <img src={loanImage} alt="login" style={{ width: "100%" }} />
+          <img src={loanImage} alt="login" style={{ width: "100%" }} />
         </Box>
 
         {/* Left Section - Login Form (Bottom on mobile) */}
         <Box sx={AUTH_STYLES.leftSection}>
-          
           {/* Logo */}
           <Box sx={AUTH_STYLES.logoContainer}>
             <img src={logo} alt="logo" width={100} height={100} />
@@ -63,12 +97,7 @@ const Login = () => {
           </Typography>
 
           {/* Form */}
-          <Box
-            component="form"
-            onSubmit={handleSubmit}
-            sx={AUTH_STYLES.form80}
-          >
-            
+          <Box component="form" onSubmit={handleSubmit} sx={AUTH_STYLES.form80}>
             {/* Email Input */}
             <TextInput
               type="email"
@@ -120,6 +149,7 @@ const Login = () => {
               borderRadius={3}
               btnTextColor="#fff"
               isBorder={"1px solid #fff"}
+              disabled={loading}
             />
           </Box>
         </Box>

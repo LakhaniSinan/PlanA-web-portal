@@ -9,6 +9,18 @@ export const apiHeaders = {
   language: "LANG",
   authorization: "Authorization",
 };
-const ENDPOINTS = {};
+const ENDPOINTS = {
+  adminLogin: "admin/login",
+  adminForgotPassword: "admin/forgot-password",
+  adminResetPassword: "admin/reset-password",
+  adminChangePassword: "admin/change-password",
+  adminDetail: "admin/get/details",
+  adminUpdate: "admin/update/details",
+
+  // USER
+  getUsers: "user/get",
+  adminUpdateUser: "user/admin/update",
+  adminChangeUserPassword: "user/admin/change-password",
+};
 
 export default ENDPOINTS;

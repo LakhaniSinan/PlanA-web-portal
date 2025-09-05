@@ -6,17 +6,22 @@ import {
   Typography,
   Grid,
   Avatar,
+  CircularProgress,
 } from "@mui/material";
 import { LockOutlined, SecurityOutlined } from "@mui/icons-material";
+import { useSnackbar } from "notistack";
 import TextInput from "../../../components/textInput";
 import CustomButton from "../../../components/customButton";
+import { adminChangePassword } from "../../../api/Modules/auth";
 
-const PasswordSection = ({ onShowNotification }) => {
+const PasswordSection = () => {
+  const { enqueueSnackbar } = useSnackbar();
   const [passwordData, setPasswordData] = useState({
-    currentPassword: "",
+    oldPassword: "",
     newPassword: "",
-    confirmPassword: "",
+    confirmNewPassword: "",
   });
+  const [loading, setLoading] = useState(false);
 
   const handlePasswordChange = (e) => {
     setPasswordData({
@@ -25,36 +30,63 @@ const PasswordSection = ({ onShowNotification }) => {
     });
   };
 
-  const handleChangePassword = () => {
+  const handleChangePassword = async () => {
     if (
-      !passwordData.currentPassword ||
+      !passwordData.oldPassword ||
       !passwordData.newPassword ||
-      !passwordData.confirmPassword
+      !passwordData.confirmNewPassword
     ) {
-      onShowNotification("Please fill all password fields", "error");
+      enqueueSnackbar("Please fill all password fields", {
+        variant: "error",
+      });
       return;
     }
 
-    if (passwordData.newPassword !== passwordData.confirmPassword) {
-      onShowNotification("New password and confirm password do not match", "error");
+    if (passwordData.newPassword !== passwordData.confirmNewPassword) {
+      enqueueSnackbar("New password and confirm password do not match", {
+        variant: "error",
+      });
       return;
     }
 
     if (passwordData.newPassword.length < 8) {
-      onShowNotification("Password must be at least 8 characters long", "error");
+      enqueueSnackbar("Password must be at least 8 characters long", {
+        variant: "error",
+      });
       return;
     }
 
-    // Here you would typically make an API call to change the password
-    console.log("Changing password:", passwordData);
-    onShowNotification("Password changed successfully!");
-
-    // Reset password fields
-    setPasswordData({
-      currentPassword: "",
-      newPassword: "",
-      confirmPassword: "",
-    });
+    try {
+      setLoading(true);
+      const response = await adminChangePassword({
+        oldPassword: passwordData.oldPassword,
+        newPassword: passwordData.newPassword,
+        confirmNewPassword: passwordData.confirmNewPassword,
+      });
+      
+      if (response.status === 200 || response.status === 201) {
+        enqueueSnackbar("Password changed successfully!", {
+          variant: "success",
+        });
+        // Reset password fields
+        setPasswordData({
+          oldPassword: "",
+          newPassword: "",
+          confirmNewPassword: "",
+        });
+      } else {
+        enqueueSnackbar(response.message || "Failed to change password", {
+          variant: "error",
+        });
+      }
+    } catch (error) {
+      console.error("Error changing password:", error);
+      enqueueSnackbar("Failed to change password", {
+        variant: "error",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -113,8 +145,8 @@ const PasswordSection = ({ onShowNotification }) => {
         <Grid container spacing={3} justifyContent="center" alignItems="center">
           <Grid item xs={12}>
             <TextInput
-              name="currentPassword"
-              value={passwordData.currentPassword}
+              name="oldPassword"
+              value={passwordData.oldPassword}
               onChange={handlePasswordChange}
               placeholder="Enter current password"
               type="password"
@@ -137,8 +169,8 @@ const PasswordSection = ({ onShowNotification }) => {
           </Grid>
           <Grid item xs={12}>
             <TextInput
-              name="confirmPassword"
-              value={passwordData.confirmPassword}
+              name="confirmNewPassword"
+              value={passwordData.confirmNewPassword}
               onChange={handlePasswordChange}
               placeholder="Confirm new password"
               type="password"
@@ -151,14 +183,15 @@ const PasswordSection = ({ onShowNotification }) => {
 
         <Box sx={{ mt: 4 }}>
           <CustomButton
-            btnLabel="Change Password"
+            btnLabel={loading ? "Changing Password..." : "Change Password"}
             handlePressBtn={handleChangePassword}
             btnBgColor="primary.main"
             btnTextColor="white"
             btnHoverColor="primary.dark"
             width="100%"
             height="50px"
-            startIcon={<LockOutlined />}
+            startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <LockOutlined />}
+            disabled={loading}
           />
         </Box>
       </CardContent>

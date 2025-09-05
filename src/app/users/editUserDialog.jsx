@@ -14,14 +14,16 @@ import {
 import { X, User, Mail, Phone, Percent } from "lucide-react";
 import TextInput from "../../components/textInput";
 import CustomButton from "../../components/customButton";
+import { adminUpdateUser, adminChangeUserPassword } from "../../api/Modules/user";
+import { useSnackbar } from "notistack";
 
-const EditUserDialog = ({ open, onClose, user, onSave }) => {
+const EditUserDialog = ({ open, onClose, user, onRefresh }) => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     phone: "",
     joinedDate: "",
-    interest_rate: "",
+    interestRate: "",
   });
 
   const [passwordData, setPasswordData] = useState({
@@ -32,15 +34,18 @@ const EditUserDialog = ({ open, onClose, user, onSave }) => {
 
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Notistack hook for notifications
+  const { enqueueSnackbar } = useSnackbar();
 
   useEffect(() => {
     if (user) {
       setFormData({
-        name: user.name || "",
+        name: user.name || user.fullName || "",
         email: user.email || "",
-        phone: user.phone || "",
-        joinedDate: user.joinedDate || "",
-        interest_rate: user.interest_rate || "",
+        phone: user.phone || user.phoneNumber || "",
+        joinedDate: user.joinedDate || user.createdAt || "",
+        interestRate: user.interestRate || "",
       });
     }
   }, [user]);
@@ -117,51 +122,108 @@ const EditUserDialog = ({ open, onClose, user, onSave }) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSave = async () => {
+  const handleSaveUser = async () => {
     if (!validateForm()) return;
-
+  
+    if (!user?._id) {
+      enqueueSnackbar("User information is missing. Please try again.", { variant: "error" });
+      return;
+    }
+  
     setIsLoading(true);
-
+  
+    const hasPasswordData = Object.values(passwordData).some((v) => v.trim());
+    const userInfoChanged =
+      formData.name !== (user.name || user.fullName || "") ||
+      formData.email !== (user.email || "") ||
+      formData.phone !== (user.phone || user.phoneNumber || "") ||
+      formData.interestRate !== (user.interestRate || "");
+  
+    let userUpdateSuccess = true;
+    let passwordUpdateSuccess = true;
+  
+    const handleApiCall = async (apiFn, payload, defaultSuccess, defaultError) => {
+      try {
+        const res = await apiFn(user._id, payload);
+        const msg = res?.data?.message || defaultSuccess;
+  
+        if ([200, 201].includes(res?.status)) {
+          enqueueSnackbar(msg, { variant: "success" });
+          return true;
+        } else {
+          enqueueSnackbar(msg || defaultError, { variant: "error" });
+          return false;
+        }
+      } catch (error) {
+        console.error("API Error:", error);
+        enqueueSnackbar(defaultError, { variant: "error" });
+        return false;
+      }
+    };
+  
     try {
-      const dataToSave = {
-        ...formData,
-        id: user.id,
-      };
-
-      // Only include password data if user wants to change password
-      const hasPasswordData = Object.values(passwordData).some((value) =>
-        value.trim()
-      );
+      // ✅ Update user info
+      if (userInfoChanged) {
+        userUpdateSuccess = await handleApiCall(
+          adminUpdateUser,
+          {
+            fullName: formData.name,
+            email: formData.email,
+            phoneNumber: formData.phone,
+            interestRate: parseFloat(formData.interestRate) || 0,
+          },
+          "User information updated successfully!",
+          "Failed to update user information. Please try again."
+        );
+      }
+  
+      // ✅ Change password
       if (hasPasswordData) {
-        dataToSave.passwordData = passwordData;
+        passwordUpdateSuccess = await handleApiCall(
+          adminChangeUserPassword,
+          {
+            oldPassword: passwordData.currentPassword,
+            newPassword: passwordData.newPassword,
+            confirmNewPassword: passwordData.confirmPassword,
+          },
+          "Password changed successfully!",
+          "Failed to change password. Please try again."
+        );
       }
-
-      if (onSave) {
-        await onSave(dataToSave);
+  
+      // ✅ Combined messages
+      if (userInfoChanged && hasPasswordData) {
+        if (userUpdateSuccess && passwordUpdateSuccess) {
+          enqueueSnackbar("User information and password updated successfully!", { variant: "success" });
+        } else if (userUpdateSuccess && !passwordUpdateSuccess) {
+          enqueueSnackbar("User information updated but password change failed.", { variant: "warning" });
+        } else if (!userUpdateSuccess && passwordUpdateSuccess) {
+          enqueueSnackbar("Password changed but user information update failed.", { variant: "warning" });
+        }
       }
-
-      // Reset password fields
-      setPasswordData({
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: "",
-      });
-
-      onClose();
+  
+      // ✅ Refresh + Close if success
+      if (userUpdateSuccess || passwordUpdateSuccess) {
+        setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
+        onClose?.();
+        onRefresh?.();
+      }
     } catch (error) {
-      console.error("Error saving user:", error);
+      console.error("Unexpected error:", error);
+      enqueueSnackbar("An unexpected error occurred. Please try again.", { variant: "error" });
     } finally {
       setIsLoading(false);
     }
   };
+  
 
   const handleClose = () => {
     setFormData({
-      name: user?.name || "",
+      name: user?.name || user?.fullName || "",
       email: user?.email || "",
-      phone: user?.phone || "",
-      joinedDate: user?.joinedDate || "",
-      interest_rate: user?.interest_rate || "",
+      phone: user?.phone || user?.phoneNumber || "",
+      joinedDate: user?.joinedDate || user?.createdAt || "",
+      interestRate: user?.interestRate || "",
     });
     setPasswordData({
       currentPassword: "",
@@ -256,9 +318,9 @@ const EditUserDialog = ({ open, onClose, user, onSave }) => {
               />
 
               <TextInput
-                value={formData.interest_rate}
+                value={formData.interestRate}
                 onChange={(e) =>
-                  handleInputChange("interest_rate", e.target.value)
+                  handleInputChange("interestRate", e.target.value)
                 }
                 InputStartIcon={<Percent size={18} color="#666" />}
                 placeholder="interest Rate"
@@ -342,8 +404,8 @@ const EditUserDialog = ({ open, onClose, user, onSave }) => {
         />
 
         <CustomButton
-          btnLabel={isLoading ? "Saving..." : "Saved"}
-          handlePressBtn={handleSave}
+          btnLabel={isLoading ? "Saving..." : "Save"}
+          handlePressBtn={handleSaveUser}
           disabled={isLoading}
           variant={"authbutton"}
           width="140px"

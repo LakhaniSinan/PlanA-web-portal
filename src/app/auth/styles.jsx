@@ -143,8 +143,8 @@ export const AUTH_STYLES = {
   },
   
   otpInput: {
-    width: { xs: "45px", sm: "50px" },
-    height: { xs: "45px", sm: "50px" },
+    width: { xs: "40px", sm: "40px" },
+    height: { xs: "40px", sm: "40px" },
     "& .MuiOutlinedInput-root": {
       borderRadius: 2,
       backgroundColor: "rgba(255, 255, 255, 0.1)",

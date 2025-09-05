@@ -2,7 +2,7 @@ import axios from "axios";
 import { apiHeaders, constants } from "./endpoints";
 
 // export let baseUrl = "https://certano-a1437ae98176.herokuapp.com/api/";
-export let baseUrl = "http://localhost:8003/api/";
+export let baseUrl = "http://localhost:8002/api/";
 
 const api = async (path, params, method, formData) => {
   let userToken = localStorage.getItem("token");

@@ -6,6 +6,8 @@ import TextInput from "../../components/textInput";
 import CustomButton from "../../components/customButton";
 import loanImage from "../../assets/loan-vector-5.png";
 import { AUTH_STYLES } from "./styles";
+import { adminResetPassword } from "../../api/Modules/auth";
+import { useSnackbar } from "notistack";
 
 const SetNewPassword = () => {
   const [formData, setFormData] = useState({
@@ -17,12 +19,16 @@ const SetNewPassword = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [email, setEmail] = useState("");
+  const [otp, setOtp] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const { enqueueSnackbar } = useSnackbar();
 
   useEffect(() => {
-    if (location.state?.email) {
+    if (location.state?.email && location.state?.otp) {
       setEmail(location.state.email);
+      setOtp(location.state.otp);
     } else {
       navigate("/forgot-password");
     }
@@ -44,7 +50,7 @@ const SetNewPassword = () => {
     return requirements;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!formData.newPassword || !formData.confirmPassword) {
@@ -66,14 +72,40 @@ const SetNewPassword = () => {
       return;
     }
 
-    console.log("Password reset for:", email);
-
-    setSuccess("Password successfully reset! Redirecting to login...");
+    setLoading(true);
     setError("");
+    setSuccess("");
 
-    setTimeout(() => {
-      navigate("/login");
-    }, 2000);
+    try {
+      const response = await adminResetPassword({
+        email: email,
+        otp: otp,
+        newPassword: formData.newPassword,
+        confirmNewPassword: formData.confirmPassword,
+      });
+
+      if (response?.status === 200 || response?.status === 201) {
+        enqueueSnackbar(response?.data?.message || "Password reset successfully", {
+          variant: "success",
+        });
+        setSuccess("Password successfully reset! Redirecting to login...");
+        
+        setTimeout(() => {
+          navigate("/login");
+        }, 2000);
+      } else {
+        enqueueSnackbar(response?.data?.message || "Failed to reset password", {
+          variant: "error",
+        });
+      }
+    } catch (error) {
+      console.error("Reset password error:", error);
+      enqueueSnackbar(error?.response?.data?.message || "Failed to reset password. Please try again.", {
+        variant: "error",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleBackToForgotPassword = () => {
@@ -173,6 +205,7 @@ const SetNewPassword = () => {
               borderRadius={3}
               btnTextColor="#fff"
               isBorder={"1px solid #fff"}
+              disabled={loading}
             />
           </Box>
         </Box>

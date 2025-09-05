@@ -1,70 +1,31 @@
 import { Box, Typography, Paper } from "@mui/material";
 import DynamicTable from "../../components/dynamicTable";
 import EditUserDialog from "./editUserDialog";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { getUsers } from "../../api/Modules/user";
+import { useSnackbar } from "notistack";
 
 const UsersManagement = () => {
   // State for edit dialog
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  // Simple dummy data for 5 users
-  const [usersData, setUsersData] = useState([
-    {
-      id: 1,
-      name: "John Smith",
-      email: "john.smith@example.com",
-      phone: "+1 202 555 0147",
-      interest_rate: "10%",
-      status: "Active",
-      joinedDate: "2024-01-15",
-    },
-    {
-      id: 2,
-      name: "Emily Johnson",
-      email: "emily.johnson@example.com",
-      phone: "+1 202 555 0182",
-      interest_rate: "10%",
-      status: "Inactive",
-      joinedDate: "2024-02-20",
-    },
-    {
-      id: 3,
-      name: "Michael Brown",
-      email: "michael.brown@example.com",
-      phone: "+1 202 555 0195",
-      interest_rate: "10%",
-      status: "Active",
-      joinedDate: "2024-03-10",
-    },
-    {
-      id: 4,
-      name: "Sophia Davis",
-      email: "sophia.davis@example.com",
-      phone: "+1 202 555 0123",
-      interest_rate: "10%",
-      status: "Pending",
-      joinedDate: "2024-04-05",
-    },
-    {
-      id: 5,
-      name: "James Wilson",
-      email: "james.wilson@example.com",
-      phone: "+1 202 555 0174",
-      interest_rate: "10%",
-      status: "Active",
-      joinedDate: "2024-05-12",
-    },
-  ]);
+  // State for users data from API
+  const [usersData, setUsersData] = useState([]);
+  
+  // Notistack hook for notifications
+  const { enqueueSnackbar } = useSnackbar();
 
-  // Updated table headers for new structure
+  // Updated table headers for API data structure
   const tableHeaders = [
     { id: "id", title: "ID", align: "center" },
     { id: "userInfo", title: "User Info", align: "left" },
     { id: "phone", title: "Phone", align: "center" },
-    { id: "interest_rate", title: "Interest Rate", align: "center" },
+    { id: "completeAddress", title: "Complete Address", align: "left" },
+    { id: "interestRate", title: "Interest Rate", align: "center" },
     { id: "status", title: "Status", align: "center" },
-    { id: "joinedDate", title: "Joined Date", align: "center" },
+    { id: "createdAt", title: "Joined Date", align: "center" },
     { id: "actions", title: "Actions", align: "center" },
   ];
 
@@ -73,11 +34,56 @@ const UsersManagement = () => {
     "id",
     "userInfo",
     "phone",
-    "interest_rate",
+    "completeAddress",
+    "interestRate",
     "status",
-    "joinedDate",
+    "createdAt",
     "actions",
   ];
+
+  const fetchAllUsers = async () => {
+    setLoading(true);
+
+    try {
+      const response = await getUsers();
+      if (response.status === 200 || response.status === 201) {
+        // Transform API data to match table structure
+        const transformedData = response.data.data.map((user, index) => ({
+          id: index + 1, // Use index as display ID
+          _id: user._id, // Keep original ID for operations
+          name: user.fullName || user.name || "N/A",
+          email: user.email,
+          phone: user.phoneNumber || user.contactNumber || "N/A",
+          address: user.address || "N/A",
+          city: user.city || "",
+          state: user.state || "",
+          country: user.country || "",
+          postalCode: user.postalCode || "",
+          interestRate: `${user.interestRate}%`,
+          emailVerified: user.emailVerified,
+          status: user.status ? "Active" : "Inactive",
+          createdAt: user.createdAt,
+          // Include all original data for edit functionality
+          ...user
+        }));
+        setUsersData(transformedData);
+        console.log("Users fetched successfully:", transformedData);
+      } else {
+        console.error("Failed to fetch users:", response.data);
+      }
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      enqueueSnackbar("Failed to fetch users. Please try again.", {
+        variant: "error",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAllUsers();
+  }, []);
 
   // Action handlers
   const handleView = (user) => {
@@ -97,21 +103,12 @@ const UsersManagement = () => {
   const handleStatusChange = (userId, newStatus) => {
     setUsersData((prevData) =>
       prevData.map((user) =>
-        user.id === userId ? { ...user, status: newStatus } : user
+        (user._id === userId || user.id === userId) ? { ...user, status: newStatus } : user
       )
     );
     console.log(`User ${userId} status changed to: ${newStatus}`);
   };
 
-  // Handle save user changes
-  const handleSaveUser = (updatedUserData) => {
-    setUsersData((prevData) =>
-      prevData.map((user) =>
-        user.id === updatedUserData.id ? { ...user, ...updatedUserData } : user
-      )
-    );
-    console.log("User updated:", updatedUserData);
-  };
 
   return (
     <Box sx={{ p: 3 }}>
@@ -132,7 +129,7 @@ const UsersManagement = () => {
           tableData={usersData}
           displayRows={displayRows}
           showPagination={true}
-          isLoading={false}
+          isLoading={loading}
           onEdit={handleEdit}
           onDelete={handleDelete}
           onViewClick={handleView}
@@ -149,8 +146,9 @@ const UsersManagement = () => {
           setSelectedUser(null);
         }}
         user={selectedUser}
-        onSave={handleSaveUser}
+        onRefresh={fetchAllUsers}
       />
+
     </Box>
   );
 };

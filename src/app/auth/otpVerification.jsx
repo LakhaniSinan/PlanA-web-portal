@@ -1,6 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Box, Paper, Typography, Container, Link, TextField } from "@mui/material";
+import {
+  Box,
+  Paper,
+  Typography,
+  Container,
+  Link,
+  TextField,
+} from "@mui/material";
 import { Mail, ArrowLeft } from "lucide-react";
 import CustomButton from "../../components/customButton";
 import loanImage from "../../assets/loan-vector-5.png";
@@ -24,11 +31,11 @@ const OTPVerification = () => {
 
   const handleOTPChange = (index, value) => {
     if (value.length > 1) return;
-    
+
     const newOTP = [...otp];
     newOTP[index] = value;
     setOtp(newOTP);
-    
+
     if (value && index < 5) {
       inputRefs.current[index + 1]?.focus();
     }
@@ -37,7 +44,7 @@ const OTPVerification = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     const otpString = otp.join("");
     if (otpString.length !== 6) {
       setError("Please enter a valid 6-digit OTP");
@@ -57,14 +64,22 @@ const OTPVerification = () => {
 
   return (
     <Container maxWidth="lg" sx={AUTH_STYLES.container}>
-      <Box sx={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <Box
+        sx={{
+          height: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
         <Paper elevation={3} sx={AUTH_STYLES.paper}>
-          
           {/* Left Section - Form */}
           <Box sx={AUTH_STYLES.leftSection}>
-            
             {/* Back Link */}
-            <Link onClick={() => navigate("/forgot-password")} sx={AUTH_STYLES.backLink}>
+            <Link
+              onClick={() => navigate("/forgot-password")}
+              sx={AUTH_STYLES.backLink}
+            >
               <ArrowLeft size={16} />
               Back to Forgot Password
             </Link>
@@ -74,18 +89,23 @@ const OTPVerification = () => {
               Verify OTP
             </Typography>
             <Typography variant="subtitle2" sx={AUTH_STYLES.subtitle}>
-              We've sent a verification code to your email address. Please enter the 6-digit code below.
+              We've sent a verification code to your email address. Please enter
+              the 6-digit code below.
             </Typography>
 
             {/* Email Display */}
             <Box sx={AUTH_STYLES.emailDisplay}>
               <Mail size={16} />
-              <Typography variant="body2" sx={{ color: "#1F3C88", fontWeight: 500 }}>{email}</Typography>
+              <Typography
+                variant="body2"
+                sx={{ color: "#fff", fontWeight: 500 }}
+              >
+                {email}
+              </Typography>
             </Box>
 
             {/* Form */}
             <Box component="form" onSubmit={handleSubmit} sx={AUTH_STYLES.form}>
-              
               {/* OTP Input Fields */}
               <Box sx={AUTH_STYLES.otpContainer}>
                 {otp.map((digit, index) => (
@@ -95,7 +115,10 @@ const OTPVerification = () => {
                     value={digit}
                     onChange={(e) => handleOTPChange(index, e.target.value)}
                     sx={AUTH_STYLES.otpInput}
-                    inputProps={{ maxLength: 1, style: { textAlign: "center" } }}
+                    inputProps={{
+                      maxLength: 1,
+                      style: { textAlign: "center" },
+                    }}
                     placeholder="-"
                   />
                 ))}
@@ -117,7 +140,7 @@ const OTPVerification = () => {
                 height="50px"
                 borderRadius={3}
                 btnTextColor="#fff"
-                sx={{ mb: 2 }}
+                sx={{ my: 2 }}
               />
 
               {/* Resend OTP Link */}
@@ -132,7 +155,11 @@ const OTPVerification = () => {
 
           {/* Right Section - Illustration */}
           <Box sx={AUTH_STYLES.rightSection}>
-            <img src={loanImage} alt="otp verification" style={{ width: "100%" }} />
+            <img
+              src={loanImage}
+              alt="otp verification"
+              style={{ width: "100%" }}
+            />
           </Box>
         </Paper>
       </Box>
