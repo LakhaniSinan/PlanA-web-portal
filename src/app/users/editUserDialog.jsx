@@ -33,7 +33,6 @@ const EditUserDialog = ({ open, onClose, user, onSave }) => {
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
 
-  // Initialize form data when user prop changes
   useEffect(() => {
     if (user) {
       setFormData({
@@ -52,7 +51,6 @@ const EditUserDialog = ({ open, onClose, user, onSave }) => {
       [field]: value,
     }));
 
-    // Clear error when user starts typing
     if (errors[field]) {
       setErrors((prev) => ({
         ...prev,
@@ -79,7 +77,6 @@ const EditUserDialog = ({ open, onClose, user, onSave }) => {
   const validateForm = () => {
     const newErrors = {};
 
-    // Validate user info
     if (!formData.name.trim()) {
       newErrors.name = "Name is required";
     }
@@ -94,7 +91,6 @@ const EditUserDialog = ({ open, onClose, user, onSave }) => {
       newErrors.phone = "Phone number is required";
     }
 
-    // Validate password fields if any password field is filled
     const hasPasswordData = Object.values(passwordData).some((value) =>
       value.trim()
     );
