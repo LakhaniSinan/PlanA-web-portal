@@ -4,16 +4,17 @@ import EditUserDialog from "./editUserDialog";
 import { useState, useEffect } from "react";
 import { getUsers } from "../../api/Modules/user";
 import { useSnackbar } from "notistack";
+import { useNavigate } from "react-router-dom";
 
 const UsersManagement = () => {
   // State for edit dialog
+  const navigate = useNavigate();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [loading, setLoading] = useState(false);
-
   // State for users data from API
   const [usersData, setUsersData] = useState([]);
-  
+
   // Notistack hook for notifications
   const { enqueueSnackbar } = useSnackbar();
 
@@ -35,7 +36,7 @@ const UsersManagement = () => {
     "userInfo",
     "phone",
     "completeAddress",
-    "interestRate",
+    "interest",
     "status",
     "createdAt",
     "actions",
@@ -47,6 +48,7 @@ const UsersManagement = () => {
     try {
       const response = await getUsers();
       if (response.status === 200 || response.status === 201) {
+        console.log("response.data.data", response.data.data);
         // Transform API data to match table structure
         const transformedData = response.data.data.map((user, index) => ({
           id: index + 1, // Use index as display ID
@@ -59,12 +61,13 @@ const UsersManagement = () => {
           state: user.state || "",
           country: user.country || "",
           postalCode: user.postalCode || "",
-          interestRate: `${user.interestRate}%`,
+          interest: `${user.interest}%`,
+          loanLimit: `${user.loanLimit}`,
           emailVerified: user.emailVerified,
           status: user.status ? "Active" : "Inactive",
           createdAt: user.createdAt,
           // Include all original data for edit functionality
-          ...user
+          ...user,
         }));
         setUsersData(transformedData);
         console.log("Users fetched successfully:", transformedData);
@@ -87,7 +90,7 @@ const UsersManagement = () => {
 
   // Action handlers
   const handleView = (user) => {
-    console.log("View user:", user);
+    navigate(`/user-history/${user._id}`);
   };
 
   const handleEdit = (user) => {
@@ -103,18 +106,19 @@ const UsersManagement = () => {
   const handleStatusChange = (userId, newStatus) => {
     setUsersData((prevData) =>
       prevData.map((user) =>
-        (user._id === userId || user.id === userId) ? { ...user, status: newStatus } : user
+        user._id === userId || user.id === userId
+          ? { ...user, status: newStatus }
+          : user
       )
     );
     console.log(`User ${userId} status changed to: ${newStatus}`);
   };
 
-
   return (
-    <Box sx={{ p: 3 }}>
+    <Box>
       {/* Simple Header */}
       <Box sx={{ mb: 3 }}>
-        <Typography variant="h4" sx={{ fontWeight: "600", mb: 1 }}>
+        <Typography variant="h4" sx={{ fontWeight: "600" }}>
           Users Management
         </Typography>
         <Typography variant="body1" sx={{ color: "#666" }}>
@@ -125,6 +129,7 @@ const UsersManagement = () => {
       {/* Simple Table */}
       <Paper elevation={1} sx={{ borderRadius: "8px" }}>
         <DynamicTable
+          tableWidth={1200}
           tableHeader={tableHeaders}
           tableData={usersData}
           displayRows={displayRows}
@@ -135,6 +140,7 @@ const UsersManagement = () => {
           onViewClick={handleView}
           showDelete={true}
           onStatusChange={handleStatusChange}
+          onView={handleView}
         />
       </Paper>
 
@@ -148,7 +154,6 @@ const UsersManagement = () => {
         user={selectedUser}
         onRefresh={fetchAllUsers}
       />
-
     </Box>
   );
 };

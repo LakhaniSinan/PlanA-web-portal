@@ -11,39 +11,64 @@ import {
   IconButton,
   Avatar,
   Chip,
+  MenuItem,
+  CircularProgress,
 } from "@mui/material";
 import React, { useState } from "react";
-import { Edit, Trash2, Mail, Phone, Calendar } from "lucide-react";
+import {
+  Edit,
+  Trash2,
+  Mail,
+  Phone,
+  Calendar,
+  Eye,
+  ChartPie,
+} from "lucide-react";
 import CustomSwitch from "../switch/index.jsx";
 import CustomButton from "../customButton/index.jsx";
+import CustomSelect from "../customSelect/index.jsx";
 
 const tableStyle = {
   "&.MuiTableContainer-root": {
-    backgroundColor: "#fff",
-    borderRadius: "16px",
-    boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
-    overflow: "auto",
+    borderRadius: 2,
   },
+
   "&.MuiTableContainer-root .MuiTableHead-root": {
     background: "linear-gradient(135deg, #667eea 0%,rgb(23, 4, 81) 100%)",
-    fontWeight: "600",
-    fontSize: "14px",
-    color: "white",
   },
-  "& .MuiTableHead-root": {
-    color: "#fff",
+
+  "& .MuiTable-root .MuiTableHead-root .MuiTableRow-root .MuiTableCell-root": {
+    padding: "10px",
   },
-  "& .MuiTableCell-root": {
-    borderBottom: "1px solid #f0f0f0",
-    padding: "16px 20px",
-    textAlign: "center",
+  "& .MuiTable-root .MuiTableBody-root .MuiTableRow-root .MuiTableCell-root": {
+    padding: "10px",
   },
+
   "& .MuiTablePagination-toolbar": {
     minHeight: "50px",
     backgroundColor: "#fafafa",
     borderTop: "1px solid #f0f0f0",
   },
 };
+
+const LOAN_STATUS = [
+  {
+    label: "Pending",
+    value: "pending",
+  },
+  {
+    label: "Approved",
+    value: "approved",
+  },
+  {
+    label: "Rejected",
+    value: "rejected",
+  },
+  {
+    label: "Completed",
+    value: "completed",
+  },
+];
 
 export default function PaginatedTable({
   tableWidth,
@@ -57,6 +82,9 @@ export default function PaginatedTable({
   showPagination = true,
   showDelete = true,
   onStatusChange,
+  onView,
+  handleLoanStatusChange,
+  statusLoading,
 }) {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -68,12 +96,6 @@ export default function PaginatedTable({
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
-  };
-
-  const handleStatusChange = (userId, newStatus) => {
-    if (onStatusChange) {
-      onStatusChange(userId, newStatus);
-    }
   };
 
   const renderCell = (row, val, index) => {
@@ -108,12 +130,12 @@ export default function PaginatedTable({
                 sx={{
                   width: 45,
                   height: 45,
-                  bgcolor: getAvatarColor(row.userInfo?.name || row.name || ""),
+                  bgcolor: getAvatarColor(row.user?.name || row.name || ""),
                   fontSize: "18px",
                   fontWeight: "bold",
                 }}
               >
-                {getInitials(row.userInfo?.name || row.name || "")}
+                {getInitials(row.user?.name || row.name || "")}
               </Avatar>
               <Box sx={{ textAlign: "left" }}>
                 <Typography
@@ -124,7 +146,7 @@ export default function PaginatedTable({
                     mb: 0.5,
                   }}
                 >
-                  {row.userInfo?.name || row.name || "N/A"}
+                  {row.user?.fullName || row.fullName || "N/A"}
                 </Typography>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                   <Mail size={14} color="#666" />
@@ -132,7 +154,7 @@ export default function PaginatedTable({
                     variant="caption"
                     sx={{ color: "#666", fontSize: "12px" }}
                   >
-                    {row.userInfo?.email || row.email || "N/A"}
+                    {row.user?.email || row.email || "N/A"}
                   </Typography>
                 </Box>
               </Box>
@@ -197,18 +219,13 @@ export default function PaginatedTable({
               sx={{
                 display: "flex",
                 flexDirection: "column",
-                alignItems: "center",
+                // alignItems: "center",
                 gap: 1,
               }}
             >
               <CustomSwitch
-                checked={row.status === "Active" || row.status === true}
-                onChange={(e) =>
-                  handleStatusChange(
-                    row._id || row.id,
-                    e.target.checked ? "Active" : "Inactive"
-                  )
-                }
+                checked={row.status}
+                onChange={(e) => onStatusChange(row, e.target.checked)}
               />
             </Box>
           </TableCell>
@@ -261,7 +278,6 @@ export default function PaginatedTable({
               sx={{
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "center",
                 gap: 1,
               }}
             >
@@ -275,6 +291,9 @@ export default function PaginatedTable({
             </Box>
           </TableCell>
         );
+
+      case "dueDateAt":
+        return <TableCell>{formatDate(row.dueDate)}</TableCell>;
 
       case "joinedDate":
         return (
@@ -298,10 +317,68 @@ export default function PaginatedTable({
           </TableCell>
         );
 
+      case "loan_tenure":
+        return (
+          <TableCell sx={{ textTransform: "capitalize" }}>
+            {row?.tenureValue} {row?.tenureType}
+          </TableCell>
+        );
+
+      case "loan_status":
+        return (
+          <TableCell sx={{ textTransform: "capitalize" }}>
+            <CustomSelect
+              value={row?.status}
+              icon={
+                statusLoading ? (
+                  <CircularProgress size={20} />
+                ) : (
+                  <ChartPie size={18} />
+                )
+              }
+              onChange={(e) =>
+                handleLoanStatusChange(row, e.target.value, index)
+              }
+            >
+              {LOAN_STATUS.map((status) => (
+                <MenuItem key={status.value} value={status.value}>
+                  {status.label}
+                </MenuItem>
+              ))}
+            </CustomSelect>
+          </TableCell>
+        );
+
+      case "installment_status":
+        return (
+          <TableCell sx={{ textTransform: "capitalize" }}>
+            {row?.status}
+          </TableCell>
+        );
+
+      case "installment_paidAt":
+        return (
+          <TableCell>{row?.paidAt ? formatDate(row.paidAt) : "__"}</TableCell>
+        );
+      case "installment_slip":
+        return (
+          <TableCell>
+            {row?.slipUrl ? (
+              <CustomButton
+                btnLabel={"View"}
+                width="auto"
+                handlePressBtn={() => window.open(row.slipUrl)}
+              />
+            ) : (
+              "__"
+            )}
+          </TableCell>
+        );
+
       case "actions":
         return (
           <TableCell align="center">
-            <Box sx={{ display: "flex", gap: 1, justifyContent: "center" }}>
+            <Box sx={{ display: "flex", gap: 1, }}>
               {/* {onViewClick && (
                 <IconButton
                   size="small"
@@ -343,6 +420,27 @@ export default function PaginatedTable({
                   }}
                 >
                   <Edit size={18} />
+                </IconButton>
+              )}
+              {onView && (
+                <IconButton
+                  size="small"
+                  onClick={() => onView(row)}
+                  sx={{
+                    bgcolor: "#fff3e0",
+                    color: "brown",
+                    width: 36,
+                    height: 36,
+                    transition: "all 0.3s ease",
+                    "&:hover": {
+                      bgcolor: "brown",
+                      color: "white",
+                      transform: "scale(1.1)",
+                      boxShadow: "0 4px 12px rgba(238, 148, 58, 0.4)",
+                    },
+                  }}
+                >
+                  <Eye size={18} />
                 </IconButton>
               )}
 
@@ -472,12 +570,10 @@ export default function PaginatedTable({
               {tableHeader?.map((header) => (
                 <TableCell key={header.id} align={header.align || "center"}>
                   <Typography
-                    fontWeight={700}
+                    fontWeight={500}
                     fontSize="13px"
                     py={1}
                     sx={{
-                      textTransform: "uppercase",
-                      letterSpacing: "0.5px",
                       color: "white",
                     }}
                   >
@@ -516,12 +612,12 @@ export default function PaginatedTable({
                 <TableCell colSpan={displayRows.length} align="center">
                   <Box sx={{ py: 4, textAlign: "center" }}>
                     <Typography fontSize="16px" sx={{ color: "#666", mb: 1 }}>
-                      {isLoading ? "Loading users..." : "No users found"}
+                      {isLoading ? "Loading data..." : "No Data found"}
                     </Typography>
                     <Typography fontSize="14px" sx={{ color: "#999" }}>
                       {isLoading
                         ? "Please wait while we fetch the data"
-                        : "Try adding some users to get started"}
+                        : "Try adding some data to get started"}
                     </Typography>
                   </Box>
                 </TableCell>

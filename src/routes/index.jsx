@@ -6,6 +6,10 @@ import {
   Settings,
   Users,
   HandCoins,
+  TableOfContents,
+  Handshake,
+  ShieldCheck,
+  ShieldHalf,
 } from "lucide-react";
 import Login from "../app/auth/login";
 import ForgotPassword from "../app/auth/forgotPassword";
@@ -16,6 +20,11 @@ import UsersManagement from "../app/users";
 import LoanManagement from "../app/loanManagement";
 import SettingsManagement from "../app/settings";
 import LoanDetails from "../app/loanManagement/loanDetail";
+import Userhistory from "../app/users/history";
+import FaqPage from "../app/faq";
+import TermsPage from "../app/terms";
+import PrivacyPage from "../app/privacy";
+import AccountNumberPage from "../app/accountNumber";
 const AUTH_ROUTES = [
   {
     id: 1,
@@ -67,7 +76,7 @@ const ADMIN_ROUTES = [
     activeIcon: <Users size={20} color="#ffffff" />,
     inActiveIcon: <Users size={20} color="#64748b" />,
   },
-    {
+  {
     id: 3,
     name: "Loan Management",
     component: <LoanManagement />,
@@ -76,6 +85,43 @@ const ADMIN_ROUTES = [
     activeIcon: <HandCoins size={20} color="#ffffff" />,
     inActiveIcon: <HandCoins size={20} color="#64748b" />,
   },
+  {
+    id: 3,
+    name: "Faq",
+    component: <FaqPage />,
+    exact: "exact",
+    path: "/faq",
+    activeIcon: <TableOfContents size={20} color="#ffffff" />,
+    inActiveIcon: <TableOfContents size={20} color="#64748b" />,
+  },
+  {
+    id: 3,
+    name: "Terms and Conditions",
+    component: <TermsPage />,
+    exact: "exact",
+    path: "/terms-conditions",
+    activeIcon: <Handshake size={20} color="#ffffff" />,
+    inActiveIcon: <Handshake size={20} color="#64748b" />,
+  },
+  {
+    id: 3,
+    name: "Privacy Policy",
+    component: <PrivacyPage />,
+    exact: "exact",
+    path: "/privacy-policy",
+    activeIcon: <ShieldCheck size={20} color="#ffffff" />,
+    inActiveIcon: <ShieldCheck size={20} color="#64748b" />,
+  },
+  {
+    id: 3,
+    name: "Account Number",
+    component: <AccountNumberPage />,
+    exact: "exact",
+    path: "/account-number",
+    activeIcon: <ShieldHalf size={20} color="#ffffff" />,
+    inActiveIcon: <ShieldHalf size={20} color="#64748b" />,
+  },
+
   {
     id: 4,
     name: "Settings",
@@ -90,7 +136,17 @@ const ADMIN_ROUTES = [
     name: "Loan Details",
     component: <LoanDetails />,
     exact: "exact",
-    path: "/loan-detail",
+    path: "/loan-detail/:id/user/:userId",
+    activeIcon: <HandCoins size={20} color="#ffffff" />,
+    inActiveIcon: <HandCoins size={20} color="#64748b" />,
+    isHideMenu: true,
+  },
+  {
+    id: 5,
+    name: "User History",
+    component: <Userhistory />,
+    exact: "exact",
+    path: "/user-history/:id",
     activeIcon: <HandCoins size={20} color="#ffffff" />,
     inActiveIcon: <HandCoins size={20} color="#64748b" />,
     isHideMenu: true,

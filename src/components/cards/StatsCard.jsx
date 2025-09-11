@@ -1,58 +1,85 @@
-import { Box, Card, CardContent, Typography, Avatar } from "@mui/material";
-import { TrendingUp, People, AccountBalance, CalendarMonth } from "@mui/icons-material";
+import {
+  Avatar,
+  Box,
+  Card,
+  CardContent,
+  Skeleton,
+  Typography,
+} from "@mui/material";
 
-const StatsCard = ({ title, value, subtitle, icon, color = "primary.main" }) => {
-  const getIcon = (iconName) => {
-    switch (iconName) {
-      case "trending":
-        return <TrendingUp />;
-      case "users":
-        return <People />;
-      case "amount":
-        return <AccountBalance />;
-      case "monthly":
-        return <CalendarMonth />;
-      default:
-        return <TrendingUp />;
-    }
-  };
+const useStyle = {
+  card: {
+    borderRadius: 2,
+    height: "100%",
+    boxShadow: "0 1px 4px rgba(0,0,0,0.1)",
+    transition: "all 0.3s ease-in-out",
+    cursor: "pointer",
+    "&:hover": {
+      transform: "translateY(-4px) scale(1.02)",
+      boxShadow: "0 8px 20px rgba(0,0,0,0.15)",
+    },
+  },
+  cardContent: {
+    p: 2,
+  },
+  box: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  boxContent: {
+    minWidth: 0,
+    flex: 1,
+  },
+  avatar: {
+    width: 50,
+    height: 50,
+    flexShrink: 0,
+    bgcolor: "primary.main",
+    color: "white",
+    transition: "all 0.3s ease",
+    "&:hover": {
+      transform: "rotate(10deg) scale(1.1)",
+      boxShadow: "0 4px 10px rgba(0,0,0,0.2)",
+    },
+  },
+};
 
+const StatsCard = ({ title, value, subtitle, icon, isLoading }) => {
   return (
-    <Card sx={{ 
-      height: "100%",
-      boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
-      transition: "transform 0.2s ease-in-out",
-      "&:hover": {
-        transform: "translateY(-4px)",
-        boxShadow: "0 8px 15px rgba(0,0,0,0.15)"
-      }
-    }}>
-      <CardContent sx={{ p: 3 }}>
-        <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-          <Avatar 
-            sx={{ 
-              bgcolor: color, 
-              width: 56, 
-              height: 56,
-              mr: 2,
-              flexShrink: 0
-            }}
-          >
-            {getIcon(icon)}
-          </Avatar>
-          <Box sx={{ minWidth: 0, flex: 1 }}>
-            <Typography variant="h6" color="text.secondary" gutterBottom noWrap>
+    <Card sx={useStyle.card}>
+      <CardContent sx={useStyle.cardContent}>
+        <Box sx={useStyle.box}>
+          {/* Left side content */}
+          <Box sx={useStyle.boxContent}>
+            <Typography
+              fontSize={18}
+              fontWeight={500}
+              color="text.secondary"
+              noWrap
+            >
               {title}
             </Typography>
-            <Typography variant="h4" component="div" sx={{ fontWeight: "bold" }} noWrap>
-              {value}
-            </Typography>
-            {subtitle && (
-              <Typography variant="body2" color="text.secondary" noWrap>
-                {subtitle}
+
+            {isLoading ? (
+              <Skeleton variant="text" animation="wave" width={80} height={38} />
+            ) : (
+              <Typography fontSize={26} fontWeight={700}>
+                {value}
               </Typography>
             )}
+            <Typography
+              fontSize={14}
+              fontWeight={400}
+              color="text.secondary"
+              noWrap
+            >
+              {subtitle}
+            </Typography>
           </Box>
+
+          {/* Right side icon */}
+          <Avatar sx={{ ...useStyle.avatar }}>{icon}</Avatar>
         </Box>
       </CardContent>
     </Card>

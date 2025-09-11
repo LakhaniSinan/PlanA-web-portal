@@ -25,6 +25,8 @@ function TextInput({
   onKeyDown,
   label,
   sx = {}, // 🟢 sx ko default empty object rakha
+  error,
+  helperText,
 }) {
   const [showPass, setShowPass] = useState(false);
 
@@ -48,6 +50,8 @@ function TextInput({
         onWheel={(e) => e.target.blur()}
         fontFamily={"Poppins"}
         onKeyDown={onKeyDown}
+        error={error}
+        helperText={helperText}
         sx={{
           "& .MuiOutlinedInput-root": {
             borderRadius: "8px",

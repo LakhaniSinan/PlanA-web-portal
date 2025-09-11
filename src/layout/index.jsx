@@ -34,7 +34,7 @@ import {
 import { useLocation, useNavigate } from "react-router-dom";
 import { ADMIN_ROUTES } from "../routes";
 
-const drawerWidth = 280;
+const drawerWidth = 240;
 
 export default function MainLayout({ children }) {
   const menuItemStyles = {
@@ -88,24 +88,25 @@ export default function MainLayout({ children }) {
   const isRouteActive = (routePath) => {
     // Handle exact matches
     if (location.pathname === routePath) return true;
-    
+
     // Handle root path special case
     if (routePath === "/" && location.pathname === "/") return true;
-    
+
     // Handle nested routes (e.g., if we're on /users/123, /users should be active)
-    if (routePath !== "/" && location.pathname.startsWith(routePath)) return true;
-    
+    if (routePath !== "/" && location.pathname.startsWith(routePath))
+      return true;
+
     // Handle wildcard routes
     if (routePath.includes("*")) {
       const basePath = routePath.split("*")[0];
       if (location.pathname.startsWith(basePath)) return true;
     }
-    
+
     return false;
   };
 
   const drawerContent = (
-    <Box sx={{ overflow: "auto", p: 2 }}>
+    <Box pt={2} px={0.5} overflow={"auto"}>
       <Toolbar />
 
       <List>
@@ -113,9 +114,8 @@ export default function MainLayout({ children }) {
           if (route.isHideMenu) return null;
           if (route.name === "") return null;
 
-          
           const isActive = isRouteActive(route.path);
-          console.log(`Route: ${route.name}, Path: ${route.path}, isActive: ${isActive}, Current: ${location.pathname}`);
+
           return (
             <ListItem key={route.id} disablePadding sx={{ mb: 0.5 }}>
               <ListItemButton
@@ -123,8 +123,8 @@ export default function MainLayout({ children }) {
                 sx={{
                   backgroundColor: isActive ? "primary.main" : "transparent",
                   color: isActive ? "white" : "text.primary",
-                  borderRadius: "12px",
-                  py: 1.5,
+                  borderRadius: "8px",
+                  py: 1,
                   "&:hover": {
                     backgroundColor: isActive ? "primary.dark" : "action.hover",
                     transform: "translateX(4px)",
@@ -132,14 +132,14 @@ export default function MainLayout({ children }) {
                   transition: "all 0.3s ease",
                 }}
               >
-                <ListItemIcon sx={{ minWidth: "40px" }}>
+                <ListItemIcon sx={{ minWidth: "30px" }}>
                   {isActive ? route.activeIcon : route.inActiveIcon}
                 </ListItemIcon>
                 <ListItemText
                   primary={route.name}
                   sx={{
                     "& .MuiTypography-root": {
-                      fontWeight: isActive ? 600 : 400,
+                      fontWeight: isActive ? 500 : 400,
                       fontSize: "14px",
                       color: isActive ? "white" : "text.primary",
                     },
@@ -331,8 +331,8 @@ export default function MainLayout({ children }) {
           p: { xs: 2, md: 3 },
           backgroundColor: "#F8FAFC",
           minHeight: "100vh",
-          overflow: "auto",
           width: "100%",
+          overflow: "auto",
         }}
       >
         <Toolbar sx={{ minHeight: "70px" }} />

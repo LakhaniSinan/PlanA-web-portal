@@ -10,43 +10,78 @@ import {
   Divider,
   Alert,
   IconButton,
+  Grid,
+  CircularProgress,
+  Stack,
 } from "@mui/material";
-import { X, User, Mail, Phone, Percent } from "lucide-react";
+import { X, User, Mail, Phone, Percent, Banknote } from "lucide-react";
 import TextInput from "../../components/textInput";
 import CustomButton from "../../components/customButton";
-import { adminUpdateUser, adminChangeUserPassword } from "../../api/Modules/user";
+import {
+  adminUpdateUser,
+  adminChangeUserPassword,
+  getUsersByUserId,
+  adminResetUserPassword,
+} from "../../api/Modules/user";
 import { useSnackbar } from "notistack";
+import {
+  vaildateUserResetPasswordForm,
+  vaildateUserUpdateForm,
+} from "../../utils/validation";
 
 const EditUserDialog = ({ open, onClose, user, onRefresh }) => {
+  const [errors, setErrors] = useState({});
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    phone: "",
-    joinedDate: "",
-    interestRate: "",
+    contactNumber: "",
+    interest: "",
+    loanLimit: "",
   });
 
+  const [resetPasswordErrors, setResetPasswordErrors] = useState({});
   const [passwordData, setPasswordData] = useState({
-    currentPassword: "",
     newPassword: "",
     confirmPassword: "",
   });
 
-  const [errors, setErrors] = useState({});
-  const [isLoading, setIsLoading] = useState(false);
-  
-  // Notistack hook for notifications
   const { enqueueSnackbar } = useSnackbar();
+  const [isLoading, setIsLoading] = useState({
+    fetch: false,
+    update: false,
+    resetPassword: false,
+  });
+
+  const fetchUsersByUserId = async () => {
+    try {
+      setIsLoading((prev) => ({ ...prev, fetch: true }));
+      const response = await getUsersByUserId(user._id);
+      if (response.status === 200 || response.status === 201) {
+        const data = response.data.data;
+        setFormData({
+          name: data.name || "",
+          email: data.email || "",
+          contactNumber: user.contactNumber || user.phoneNumber || "",
+          interest: data.interest || "",
+          loanLimit: data.loanLimit || "",
+        });
+      } else {
+        enqueueSnackbar(response.data.message, {
+          variant: "error",
+        });
+      }
+    } catch (error) {
+      enqueueSnackbar(error.response.data.message, {
+        variant: "error",
+      });
+    } finally {
+      setIsLoading((prev) => ({ ...prev, fetch: false }));
+    }
+  };
 
   useEffect(() => {
     if (user) {
-      setFormData({
-        name: user.name || user.fullName || "",
-        email: user.email || "",
-        phone: user.phone || user.phoneNumber || "",
-        joinedDate: user.joinedDate || user.createdAt || "",
-        interestRate: user.interestRate || "",
-      });
+      fetchUsersByUserId();
     }
   }, [user]);
 
@@ -70,168 +105,70 @@ const EditUserDialog = ({ open, onClose, user, onRefresh }) => {
       [field]: value,
     }));
 
-    // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors((prev) => ({
+    if (resetPasswordErrors[field]) {
+      setResetPasswordErrors((prev) => ({
         ...prev,
         [field]: "",
       }));
     }
   };
 
-  const validateForm = () => {
-    const newErrors = {};
-
-    if (!formData.name.trim()) {
-      newErrors.name = "Name is required";
-    }
-
-    if (!formData.email.trim()) {
-      newErrors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Please enter a valid email";
-    }
-
-    if (!formData.phone.trim()) {
-      newErrors.phone = "Phone number is required";
-    }
-
-    const hasPasswordData = Object.values(passwordData).some((value) =>
-      value.trim()
-    );
-
-    if (hasPasswordData) {
-      if (!passwordData.currentPassword.trim()) {
-        newErrors.currentPassword = "Current password is required";
-      }
-
-      if (!passwordData.newPassword.trim()) {
-        newErrors.newPassword = "New password is required";
-      } else if (passwordData.newPassword.length < 6) {
-        newErrors.newPassword = "Password must be at least 6 characters";
-      }
-
-      if (!passwordData.confirmPassword.trim()) {
-        newErrors.confirmPassword = "Please confirm your new password";
-      } else if (passwordData.newPassword !== passwordData.confirmPassword) {
-        newErrors.confirmPassword = "Passwords do not match";
-      }
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSaveUser = async () => {
-    if (!validateForm()) return;
-  
-    if (!user?._id) {
-      enqueueSnackbar("User information is missing. Please try again.", { variant: "error" });
-      return;
-    }
-  
-    setIsLoading(true);
-  
-    const hasPasswordData = Object.values(passwordData).some((v) => v.trim());
-    const userInfoChanged =
-      formData.name !== (user.name || user.fullName || "") ||
-      formData.email !== (user.email || "") ||
-      formData.phone !== (user.phone || user.phoneNumber || "") ||
-      formData.interestRate !== (user.interestRate || "");
-  
-    let userUpdateSuccess = true;
-    let passwordUpdateSuccess = true;
-  
-    const handleApiCall = async (apiFn, payload, defaultSuccess, defaultError) => {
-      try {
-        const res = await apiFn(user._id, payload);
-        const msg = res?.data?.message || defaultSuccess;
-  
-        if ([200, 201].includes(res?.status)) {
-          enqueueSnackbar(msg, { variant: "success" });
-          return true;
-        } else {
-          enqueueSnackbar(msg || defaultError, { variant: "error" });
-          return false;
-        }
-      } catch (error) {
-        console.error("API Error:", error);
-        enqueueSnackbar(defaultError, { variant: "error" });
-        return false;
-      }
-    };
-  
-    try {
-      // ✅ Update user info
-      if (userInfoChanged) {
-        userUpdateSuccess = await handleApiCall(
-          adminUpdateUser,
-          {
-            fullName: formData.name,
-            email: formData.email,
-            phoneNumber: formData.phone,
-            interestRate: parseFloat(formData.interestRate) || 0,
-          },
-          "User information updated successfully!",
-          "Failed to update user information. Please try again."
-        );
-      }
-  
-      // ✅ Change password
-      if (hasPasswordData) {
-        passwordUpdateSuccess = await handleApiCall(
-          adminChangeUserPassword,
-          {
-            oldPassword: passwordData.currentPassword,
-            newPassword: passwordData.newPassword,
-            confirmNewPassword: passwordData.confirmPassword,
-          },
-          "Password changed successfully!",
-          "Failed to change password. Please try again."
-        );
-      }
-  
-      // ✅ Combined messages
-      if (userInfoChanged && hasPasswordData) {
-        if (userUpdateSuccess && passwordUpdateSuccess) {
-          enqueueSnackbar("User information and password updated successfully!", { variant: "success" });
-        } else if (userUpdateSuccess && !passwordUpdateSuccess) {
-          enqueueSnackbar("User information updated but password change failed.", { variant: "warning" });
-        } else if (!userUpdateSuccess && passwordUpdateSuccess) {
-          enqueueSnackbar("Password changed but user information update failed.", { variant: "warning" });
-        }
-      }
-  
-      // ✅ Refresh + Close if success
-      if (userUpdateSuccess || passwordUpdateSuccess) {
-        setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
-        onClose?.();
-        onRefresh?.();
-      }
-    } catch (error) {
-      console.error("Unexpected error:", error);
-      enqueueSnackbar("An unexpected error occurred. Please try again.", { variant: "error" });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-
   const handleClose = () => {
     setFormData({
-      name: user?.name || user?.fullName || "",
-      email: user?.email || "",
-      phone: user?.phone || user?.phoneNumber || "",
-      joinedDate: user?.joinedDate || user?.createdAt || "",
-      interestRate: user?.interestRate || "",
+      name: "",
+      email: "",
+      contactNumber: "",
+      interest: "",
+      loanLimit: "",
     });
     setPasswordData({
-      currentPassword: "",
       newPassword: "",
       confirmPassword: "",
     });
     setErrors({});
+    setResetPasswordErrors({});
     onClose();
+  };
+
+  const handleUpdateUser = async () => {
+    if (!vaildateUserUpdateForm(formData, setErrors)) return;
+
+    try {
+      setIsLoading((prev) => ({ ...prev, update: true }));
+      const response = await adminUpdateUser(user._id, {
+        ...formData,
+        phoneNumber: formData.contactNumber,
+        fullName: formData.name,
+      });
+      if ([200, 201].includes(response.status)) {
+        enqueueSnackbar(response.data.message, { variant: "success" });
+        handleClose();
+        onRefresh();
+      }
+    } catch (error) {
+      enqueueSnackbar(error.response.data.message, { variant: "error" });
+    } finally {
+      setIsLoading((prev) => ({ ...prev, update: false }));
+    }
+  };
+
+  const handleResetPassword = async () => {
+    if (!vaildateUserResetPasswordForm(passwordData, setResetPasswordErrors))
+      return;
+
+    try {
+      setIsLoading((prev) => ({ ...prev, resetPassword: true }));
+      const response = await adminResetUserPassword(user._id, passwordData);
+      if ([200, 201].includes(response.status)) {
+        enqueueSnackbar(response.data.message, { variant: "success" });
+        handleClose();
+        onRefresh();
+      }
+    } catch (error) {
+      enqueueSnackbar(error.response.data.message, { variant: "error" });
+    } finally {
+      setIsLoading((prev) => ({ ...prev, resetPassword: false }));
+    }
   };
 
   if (!user) return null;
@@ -249,171 +186,199 @@ const EditUserDialog = ({ open, onClose, user, onRefresh }) => {
         },
       }}
     >
-      <DialogTitle
-        sx={{
-          pb: 1,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          background:
-            "linear-gradient(135deg, #667eea 0%, rgb(23, 4, 81) 100%)",
-          color: "white",
-        }}
-      >
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-          <Avatar
+      {isLoading.fetch ? (
+        <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+          <CircularProgress />
+        </Box>
+      ) : (
+        <>
+          <DialogTitle
             sx={{
-              width: 40,
-              height: 40,
-              bgcolor: "rgba(255,255,255,0.2)",
-              fontSize: "18px",
-              fontWeight: "bold",
+              pb: 1,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              background:
+                "linear-gradient(135deg, #667eea 0%, rgb(23, 4, 81) 100%)",
+              color: "white",
             }}
           >
-            {user.name?.charAt(0) || "U"}
-          </Avatar>
-          <Typography variant="h6" color="white" sx={{ fontWeight: "600" }}>
-            Edit User: {user.name}
-          </Typography>
-        </Box>
-        <IconButton onClick={handleClose} sx={{ color: "white" }}>
-          <X size={20} />
-        </IconButton>
-      </DialogTitle>
-
-      <DialogContent sx={{ pt: 3 }}>
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-          {/* User Information Section */}
-          <Box mt={3}>
-            <Typography
-              variant="h6"
-              sx={{ mb: 2, color: "#333", fontWeight: "600" }}
-            >
-              User Information
-            </Typography>
-
-            <Box
-              sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}
-            >
-              <TextInput
-                value={formData.name}
-                onChange={(e) => handleInputChange("name", e.target.value)}
-                InputStartIcon={<User size={18} color="#666" />}
-                fullWidth
-              />
-
-              <TextInput
-                type="email"
-                value={formData.email}
-                onChange={(e) => handleInputChange("email", e.target.value)}
-                InputStartIcon={<Mail size={18} color="#666" />}
-                fullWidth
-              />
-
-              <TextInput
-                value={formData.phone}
-                onChange={(e) => handleInputChange("phone", e.target.value)}
-                InputStartIcon={<Phone size={18} color="#666" />}
-                fullWidth
-              />
-
-              <TextInput
-                value={formData.interestRate}
-                onChange={(e) =>
-                  handleInputChange("interestRate", e.target.value)
-                }
-                InputStartIcon={<Percent size={18} color="#666" />}
-                placeholder="interest Rate"
-                fullWidth
-              />
+            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+              <Avatar
+                sx={{
+                  width: 40,
+                  height: 40,
+                  bgcolor: "rgba(255,255,255,0.2)",
+                  fontSize: "18px",
+                  fontWeight: "bold",
+                }}
+              >
+                {user.name?.charAt(0) || "U"}
+              </Avatar>
+              <Typography variant="h6" color="white" sx={{ fontWeight: "600" }}>
+                Edit User: {user.name}
+              </Typography>
             </Box>
-          </Box>
+            <IconButton onClick={handleClose} sx={{ color: "white" }}>
+              <X size={20} />
+            </IconButton>
+          </DialogTitle>
 
-          <Divider />
+          <DialogContent sx={{ p: 3 }}>
+            {/* User Information Section */}
+            <Box sx={{ py: 2 }}>
+              <Typography
+                variant="h6"
+                sx={{ mb: 1, color: "#333", fontWeight: "600" }}
+              >
+                User Information
+              </Typography>
 
-          {/* Password Change Section */}
-          <Box>
-            <Typography
-              variant="h6"
-              sx={{ mb: 2, color: "#333", fontWeight: "600" }}
-            >
-              Change Password
-            </Typography>
-            <Typography variant="body2" sx={{ mb: 2, color: "#666" }}>
-              Leave password fields empty if you don't want to change the
-              password
-            </Typography>
+              <Grid container spacing={2}>
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <TextInput
+                    value={formData.name}
+                    onChange={(e) => handleInputChange("name", e.target.value)}
+                    InputStartIcon={<User size={18} color="#666" />}
+                    fullWidth
+                    error={Boolean(errors.name)}
+                    helperText={errors.name}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <TextInput
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => handleInputChange("email", e.target.value)}
+                    InputStartIcon={<Mail size={18} color="#666" />}
+                    fullWidth
+                    error={Boolean(errors.email)}
+                    helperText={errors.email}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <TextInput
+                    value={formData.contactNumber}
+                    onChange={(e) => handleInputChange("contactNumber", e.target.value)}
+                    InputStartIcon={<Phone size={18} color="#666" />}
+                    fullWidth
+                    type="number"
+                    error={Boolean(errors.contactNumber)}
+                    helperText={errors.contactNumber}
+                  />
+                </Grid>
+              </Grid>
 
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-              <TextInput
-                showLabel="Current Password"
-                type="password"
-                value={passwordData.currentPassword}
-                onChange={(e) =>
-                  handlePasswordChange("currentPassword", e.target.value)
-                }
-                showPassIcon={true}
-                fullWidth
-              />
+              <Typography
+                variant="h6"
+                sx={{ mt: 2, mb: 1, color: "#333", fontWeight: "600" }}
+              >
+                Update Interest and Loan Limit
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <TextInput
+                    value={formData.interest}
+                    onChange={(e) =>
+                      handleInputChange("interest", e.target.valueAsNumber)
+                    }
+                    InputStartIcon={<Percent size={18} color="#666" />}
+                    placeholder="Interest Rate"
+                    fullWidth
+                    type="number"
+                    error={Boolean(errors.interest)}
+                    helperText={errors.interest}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <TextInput
+                    value={formData.loanLimit}
+                    onChange={(e) =>
+                      handleInputChange("loanLimit", e.target.valueAsNumber)
+                    }
+                    InputStartIcon={<Banknote size={18} color="#666" />}
+                    placeholder="Loan Limit"
+                    fullWidth
+                    type="number"
+                    error={Boolean(errors.loanLimit)}
+                    helperText={errors.loanLimit}
+                  />
+                </Grid>
+              </Grid>
+              <Stack alignItems={"flex-end"} my={2}>
+                <CustomButton
+                  btnLabel={isLoading.update ? "Updating..." : "Update User"}
+                  handlePressBtn={handleUpdateUser}
+                  disabled={isLoading.update}
+                  variant={"authbutton"}
+                  width="140px"
+                  height="40px"
+                  btnTextSize="14px"
+                  textWeight="500"
+                />
+              </Stack>
+              <Divider />
 
-              <TextInput
-                showLabel="New Password"
-                type="password"
-                value={passwordData.newPassword}
-                onChange={(e) =>
-                  handlePasswordChange("newPassword", e.target.value)
-                }
-                showPassIcon={true}
-                fullWidth
-              />
+              {/* Password Change Section */}
+              <Typography
+                variant="h6"
+                sx={{ mt: 2, color: "#333", fontWeight: "600" }}
+              >
+                Reset Password
+              </Typography>
+              <Typography variant="body2" sx={{ mb: 2, color: "#666" }}>
+                Leave password fields empty if you don't want to reset the
+                password
+              </Typography>
 
-              <TextInput
-                showLabel="Confirm New Password"
-                type="password"
-                value={passwordData.confirmPassword}
-                onChange={(e) =>
-                  handlePasswordChange("confirmPassword", e.target.value)
-                }
-                showPassIcon={true}
-                fullWidth
-              />
+              <Grid container spacing={2}>
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <TextInput
+                    showLabel="New Password"
+                    type="password"
+                    value={passwordData.newPassword}
+                    onChange={(e) =>
+                      handlePasswordChange("newPassword", e.target.value)
+                    }
+                    showPassIcon={true}
+                    fullWidth
+                    error={Boolean(resetPasswordErrors.newPassword)}
+                    helperText={resetPasswordErrors.newPassword}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <TextInput
+                    showLabel="Confirm New Password"
+                    type="password"
+                    value={passwordData.confirmPassword}
+                    onChange={(e) =>
+                      handlePasswordChange("confirmPassword", e.target.value)
+                    }
+                    showPassIcon={true}
+                    fullWidth
+                    error={Boolean(resetPasswordErrors.confirmPassword)}
+                    helperText={resetPasswordErrors.confirmPassword}
+                  />
+                </Grid>
+              </Grid>
+              <Stack alignItems={"flex-end"} my={2}>
+                <CustomButton
+                  btnLabel={
+                    isLoading.resetPassword ? "Resetting..." : "Reset Password"
+                  }
+                  handlePressBtn={handleResetPassword}
+                  disabled={isLoading.resetPassword}
+                  variant={"authbutton"}
+                  width="auto"
+                  height="40px"
+                  btnTextSize="14px"
+                  textWeight="500"
+                />
+              </Stack>
             </Box>
-          </Box>
-
-          {/* Error Alert */}
-          {Object.keys(errors).length > 0 && (
-            <Alert severity="error" sx={{ mt: 2 }}>
-              Please fix the errors above before saving.
-            </Alert>
-          )}
-        </Box>
-      </DialogContent>
-
-      <DialogActions sx={{ p: 3, pt: 1 }}>
-        <CustomButton
-          btnLabel="Cancel"
-          handlePressBtn={handleClose}
-          variant="outlined"
-          borderColor="#E5E7EB"
-          btnTextColor="#374151"
-          btnBgColor="transparent"
-          btnHoverColor="#F3F4F6"
-          borderRadius="8px"
-          width="120px"
-          height="40px"
-        />
-
-        <CustomButton
-          btnLabel={isLoading ? "Saving..." : "Save"}
-          handlePressBtn={handleSaveUser}
-          disabled={isLoading}
-          variant={"authbutton"}
-          width="140px"
-          height="40px"
-          btnTextSize="14px"
-          textWeight="500"
-        />
-      </DialogActions>
+          </DialogContent>
+        </>
+      )}
     </Dialog>
   );
 };
