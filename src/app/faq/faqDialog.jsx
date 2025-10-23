@@ -31,10 +31,13 @@ const FaqDialog = forwardRef(({ onRefresh }, ref) => {
     update: false,
   });
   const [dialogData, setDialogData] = useState(null);
+  console.log(dialogData?.type, " dialogData?.type dialogData?.type");
 
   // Expose methods to parent component through ref
   useImperativeHandle(ref, () => ({
     openDialog: (faqData) => {
+      console.log(faqData, "faqDatafaqDatafaqDatafaqData");
+
       setOpen(true);
       setDialogData(faqData);
       if (faqData?.type === "edit") {

@@ -22,8 +22,8 @@ const AccountNumberPage = () => {
 
   const fetchSetting = async () => {
     try {
-      setIsLoading((prev) => ({ ...prev, fetch: true }));
-      const response = await getSetting({ select: "accountNumber" });
+      const response = await getSetting();
+
       if (response.data.status === "success") {
         setAccountNumber(response.data.data.accountNumber);
         setObjectId(response.data.data._id);
@@ -102,7 +102,6 @@ const AccountNumberPage = () => {
             width="100%"
             height={"40px"}
             disabled={isLoading.update}
-            
           />
         </Grid>
       </Grid>

@@ -28,10 +28,12 @@ const ENDPOINTS = {
   requestLoanInstallment: "user/request-loan/installment",
 
   // FAQ
-  faq: "admin/faq",
+  faq: "admin/faq/create",
+  faqUpdate: "admin/faq/update",
+  getFaq: "admin/faq/fetch",
 
   // Setting
-  setting: "admin/setting",
+  setting: "admin/settings/fetch",
 
   // Dashboard
   getDashboard: "admin/dashboard",

@@ -1,5 +1,9 @@
 import {
   Box,
+  Chip,
+  CircularProgress,
+  IconButton,
+  MenuItem,
   Table,
   TableBody,
   TableCell,
@@ -8,25 +12,12 @@ import {
   TablePagination,
   TableRow,
   Typography,
-  IconButton,
-  Avatar,
-  Chip,
-  MenuItem,
-  CircularProgress,
 } from "@mui/material";
-import React, { useState } from "react";
-import {
-  Edit,
-  Trash2,
-  Mail,
-  Phone,
-  Calendar,
-  Eye,
-  ChartPie,
-} from "lucide-react";
-import CustomSwitch from "../switch/index.jsx";
+import { Calendar, ChartPie, Edit, Eye, Mail, Phone } from "lucide-react";
+import { useState } from "react";
 import CustomButton from "../customButton/index.jsx";
 import CustomSelect from "../customSelect/index.jsx";
+import CustomSwitch from "../switch/index.jsx";
 
 const tableStyle = {
   "&.MuiTableContainer-root": {
@@ -85,6 +76,7 @@ export default function PaginatedTable({
   onView,
   handleLoanStatusChange,
   statusLoading,
+  onEligibleChange,
 }) {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -99,6 +91,8 @@ export default function PaginatedTable({
   };
 
   const renderCell = (row, val, index) => {
+    console.log(row, "rowrowrowrowrow123213");
+
     switch (val) {
       case "id":
         return (
@@ -126,17 +120,10 @@ export default function PaginatedTable({
         return (
           <TableCell>
             <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-              <Avatar
-                sx={{
-                  width: 45,
-                  height: 45,
-                  bgcolor: getAvatarColor(row.user?.name || row.name || ""),
-                  fontSize: "18px",
-                  fontWeight: "bold",
-                }}
-              >
-                {getInitials(row.user?.name || row.name || "")}
-              </Avatar>
+              <img
+                src={row?.user?.image}
+                style={{ height: 50, width: 50, borderRadius: 100 }}
+              />
               <Box sx={{ textAlign: "left" }}>
                 <Typography
                   variant="subtitle2"
@@ -146,7 +133,10 @@ export default function PaginatedTable({
                     mb: 0.5,
                   }}
                 >
-                  {row.user?.fullName || row.fullName || "N/A"}
+                  {row.user?.name ||
+                    row.user?.fullName ||
+                    row.fullName ||
+                    "N/A"}
                 </Typography>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                   <Mail size={14} color="#666" />
@@ -226,6 +216,24 @@ export default function PaginatedTable({
               <CustomSwitch
                 checked={row.status}
                 onChange={(e) => onStatusChange(row, e.target.checked)}
+              />
+            </Box>
+          </TableCell>
+        );
+      case "isEligible":
+        return (
+          <TableCell>
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                // alignItems: "center",
+                gap: 1,
+              }}
+            >
+              <CustomSwitch
+                checked={row.isEligible}
+                onChange={(e) => onEligibleChange(row, e.target.checked)}
               />
             </Box>
           </TableCell>
@@ -378,7 +386,7 @@ export default function PaginatedTable({
       case "actions":
         return (
           <TableCell align="center">
-            <Box sx={{ display: "flex", gap: 1, }}>
+            <Box sx={{ display: "flex", gap: 1 }}>
               {/* {onViewClick && (
                 <IconButton
                   size="small"
@@ -531,6 +539,8 @@ export default function PaginatedTable({
   };
 
   const getInitials = (name) => {
+    console.log(name, "namenamenamenamename");
+
     if (!name || name.length === 0) return "?";
 
     return name

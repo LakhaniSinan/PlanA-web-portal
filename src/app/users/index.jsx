@@ -1,10 +1,10 @@
-import { Box, Typography, Paper } from "@mui/material";
+import { Box, Paper, Typography } from "@mui/material";
+import { useSnackbar } from "notistack";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { adminUpdateUser, getUsers } from "../../api/Modules/user";
 import DynamicTable from "../../components/dynamicTable";
 import EditUserDialog from "./editUserDialog";
-import { useState, useEffect } from "react";
-import { getUsers } from "../../api/Modules/user";
-import { useSnackbar } from "notistack";
-import { useNavigate } from "react-router-dom";
 
 const UsersManagement = () => {
   // State for edit dialog
@@ -25,6 +25,7 @@ const UsersManagement = () => {
     { id: "phone", title: "Phone", align: "center" },
     { id: "completeAddress", title: "Complete Address", align: "left" },
     { id: "interestRate", title: "Interest Rate", align: "center" },
+    { id: "eligible", title: "Eligible", align: "center" },
     { id: "status", title: "Status", align: "center" },
     { id: "createdAt", title: "Joined Date", align: "center" },
     { id: "actions", title: "Actions", align: "center" },
@@ -37,6 +38,7 @@ const UsersManagement = () => {
     "phone",
     "completeAddress",
     "interest",
+    "isEligible",
     "status",
     "createdAt",
     "actions",
@@ -102,16 +104,44 @@ const UsersManagement = () => {
     console.log("Delete user:", user);
   };
 
-  // Status change handler
-  const handleStatusChange = (userId, newStatus) => {
-    setUsersData((prevData) =>
-      prevData.map((user) =>
-        user._id === userId || user.id === userId
-          ? { ...user, status: newStatus }
-          : user
-      )
-    );
-    console.log(`User ${userId} status changed to: ${newStatus}`);
+  const handleStatusChange = async (userId, newStatus) => {
+    try {
+      setLoading(true);
+      const response = await adminUpdateUser(userId._id, {
+        status: newStatus,
+      });
+      setLoading(true);
+      if ([200, 201].includes(response.status)) {
+        enqueueSnackbar(response.data.message, { variant: "success" });
+        fetchAllUsers();
+      } else {
+        enqueueSnackbar(response.data.message, { variant: "error" });
+      }
+    } catch (error) {
+      enqueueSnackbar(error.response.data.message, { variant: "error" });
+    } finally {
+      setLoading((prev) => ({ ...prev, update: false }));
+    }
+  };
+
+  const onEligibleChange = async (userId, newStatus) => {
+    try {
+      setLoading(true);
+      const response = await adminUpdateUser(userId._id, {
+        isEligible: newStatus,
+      });
+      setLoading(true);
+      if ([200, 201].includes(response.status)) {
+        enqueueSnackbar(response.data.message, { variant: "success" });
+        fetchAllUsers();
+      } else {
+        enqueueSnackbar(response.data.message, { variant: "error" });
+      }
+    } catch (error) {
+      enqueueSnackbar(error.response.data.message, { variant: "error" });
+    } finally {
+      setLoading((prev) => ({ ...prev, update: false }));
+    }
   };
 
   return (
@@ -140,6 +170,7 @@ const UsersManagement = () => {
           onViewClick={handleView}
           showDelete={true}
           onStatusChange={handleStatusChange}
+          onEligibleChange={onEligibleChange}
           onView={handleView}
         />
       </Paper>

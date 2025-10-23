@@ -60,10 +60,9 @@ const FaqPage = () => {
   }, []);
 
   const handleStatusChange = async (row, newStatus) => {
-    console.log(newStatus,"newStatusnewStatusnewStatus")
     try {
       setIsLoading(true);
-      const response = await updateFaq(row._id, { status: newStatus});
+      const response = await updateFaq(row._id, { status: newStatus });
       if ([200, 201].includes(response?.status)) {
         enqueueSnackbar(response?.data?.message || "Something went wrong", {
           variant: "success",

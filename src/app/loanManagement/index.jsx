@@ -5,8 +5,6 @@ import { useNavigate } from "react-router-dom";
 import { getAllLoanRequests, updateLoanStatus } from "../../api/Modules/user";
 import { useSnackbar } from "notistack";
 
-
-
 // Table headers for loan management
 const tableHeaders = [
   { id: "createdAt", title: "Created At", align: "left" },
