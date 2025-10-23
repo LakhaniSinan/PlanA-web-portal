@@ -274,7 +274,7 @@ export default function MainLayout({ children }) {
               <ListItemIcon>
                 <Settings fontSize="small" />
               </ListItemIcon>
-              Settings
+              Profile
             </MenuItem>
 
             <Divider sx={{ my: 1 }} />

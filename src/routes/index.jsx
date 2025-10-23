@@ -25,6 +25,7 @@ import FaqPage from "../app/faq";
 import TermsPage from "../app/terms";
 import PrivacyPage from "../app/privacy";
 import AccountNumberPage from "../app/accountNumber";
+import AdditionalSettings from "../app/additionalSettings";
 const AUTH_ROUTES = [
   {
     id: 1,
@@ -94,24 +95,24 @@ const ADMIN_ROUTES = [
     activeIcon: <TableOfContents size={20} color="#ffffff" />,
     inActiveIcon: <TableOfContents size={20} color="#64748b" />,
   },
-  {
-    id: 3,
-    name: "Terms and Conditions",
-    component: <TermsPage />,
-    exact: "exact",
-    path: "/terms-conditions",
-    activeIcon: <Handshake size={20} color="#ffffff" />,
-    inActiveIcon: <Handshake size={20} color="#64748b" />,
-  },
-  {
-    id: 3,
-    name: "Privacy Policy",
-    component: <PrivacyPage />,
-    exact: "exact",
-    path: "/privacy-policy",
-    activeIcon: <ShieldCheck size={20} color="#ffffff" />,
-    inActiveIcon: <ShieldCheck size={20} color="#64748b" />,
-  },
+  // {
+  //   id: 3,
+  //   name: "Terms and Conditions",
+  //   component: <TermsPage />,
+  //   exact: "exact",
+  //   path: "/terms-conditions",
+  //   activeIcon: <Handshake size={20} color="#ffffff" />,
+  //   inActiveIcon: <Handshake size={20} color="#64748b" />,
+  // },
+  // {
+  //   id: 3,
+  //   name: "Privacy Policy",
+  //   component: <PrivacyPage />,
+  //   exact: "exact",
+  //   path: "/privacy-policy",
+  //   activeIcon: <ShieldCheck size={20} color="#ffffff" />,
+  //   inActiveIcon: <ShieldCheck size={20} color="#64748b" />,
+  // },
   {
     id: 3,
     name: "Account Number",
@@ -124,8 +125,17 @@ const ADMIN_ROUTES = [
 
   {
     id: 4,
-    name: "Settings",
+    name: "Profile",
     component: <SettingsManagement />,
+    exact: "exact",
+    path: "/profile",
+    activeIcon: <Settings size={20} color="#ffffff" />,
+    inActiveIcon: <Settings size={20} color="#64748b" />,
+  },
+  {
+    id: 4,
+    name: "Settings",
+    component: <AdditionalSettings />,
     exact: "exact",
     path: "/settings",
     activeIcon: <Settings size={20} color="#ffffff" />,
