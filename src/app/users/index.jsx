@@ -14,6 +14,7 @@ const UsersManagement = () => {
   const [loading, setLoading] = useState(false);
   // State for users data from API
   const [usersData, setUsersData] = useState([]);
+  console.log(usersData, "usersDatausersDatausersData");
 
   // Notistack hook for notifications
   const { enqueueSnackbar } = useSnackbar();

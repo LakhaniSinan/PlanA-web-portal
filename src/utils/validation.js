@@ -53,7 +53,7 @@ const vaildateFaqForm = (formData, setFormError,type) => {
   const newErrors = {};
 
   if (type === "edit") {
-    if (!formData.order.trim()) {
+    if (formData.order === null || formData.order === undefined || formData.order === "") {
       newErrors.order = "Order is required";
     }
   }

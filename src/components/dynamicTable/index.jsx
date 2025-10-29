@@ -121,7 +121,7 @@ export default function PaginatedTable({
           <TableCell>
             <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
               <img
-                src={row?.user?.image}
+                src={row?.user?.image || row?.image}
                 style={{ height: 50, width: 50, borderRadius: 100 }}
               />
               <Box sx={{ textAlign: "left" }}>
@@ -133,10 +133,7 @@ export default function PaginatedTable({
                     mb: 0.5,
                   }}
                 >
-                  {row.user?.name ||
-                    row.user?.fullName ||
-                    row.fullName ||
-                    "N/A"}
+                  {row.user?.name || row.user?.fullName || row.name || "N/A"}
                 </Typography>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                   <Mail size={14} color="#666" />

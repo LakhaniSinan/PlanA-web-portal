@@ -37,7 +37,7 @@ const FaqPage = () => {
       setIsLoading(true);
       const response = await getAllFaqs();
       if ([200, 201].includes(response?.status)) {
-        setFaqData(response.data.data);
+        setFaqData(response.data.data?.reverse());
       } else {
         enqueueSnackbar(response?.data?.message || "Something went wrong", {
           variant: "error",
@@ -108,7 +108,7 @@ const FaqPage = () => {
       <Paper elevation={1} sx={{ borderRadius: "8px" }}>
         <DynamicTable
           tableHeader={tableHeaders}
-          tableData={faqData}
+          tableData={faqData?.reverse()}
           displayRows={displayRows}
           isLoading={isLoading}
           showPagination={true}

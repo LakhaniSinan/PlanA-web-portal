@@ -98,6 +98,7 @@ const FaqDialog = forwardRef(({ onRefresh }, ref) => {
         dialogData?.type === "edit"
           ? await updateFaq(dialogData?.data?._id, payload)
           : await createFaq(payload);
+      console.log(api, "dialogDatadialogDatadialogDatadialogDataF");
 
       const response = await api;
       if ([200, 201].includes(response.status)) {

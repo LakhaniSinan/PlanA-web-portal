@@ -1,31 +1,25 @@
 import {
-  CreditCard,
-  FileText,
-  History,
+  HandCoins,
   LayoutDashboard,
   Settings,
-  Users,
-  HandCoins,
-  TableOfContents,
-  Handshake,
-  ShieldCheck,
   ShieldHalf,
+  TableOfContents,
+  Users,
 } from "lucide-react";
-import Login from "../app/auth/login";
-import ForgotPassword from "../app/auth/forgotPassword";
-import OTPVerification from "../app/auth/otpVerification";
-import SetNewPassword from "../app/auth/setNewPassword";
-import Dashboard from "../app/dashboard";
-import UsersManagement from "../app/users";
-import LoanManagement from "../app/loanManagement";
-import SettingsManagement from "../app/settings";
-import LoanDetails from "../app/loanManagement/loanDetail";
-import Userhistory from "../app/users/history";
-import FaqPage from "../app/faq";
-import TermsPage from "../app/terms";
-import PrivacyPage from "../app/privacy";
 import AccountNumberPage from "../app/accountNumber";
 import AdditionalSettings from "../app/additionalSettings";
+import ForgotPassword from "../app/auth/forgotPassword";
+import Login from "../app/auth/login";
+import OTPVerification from "../app/auth/otpVerification";
+import SetNewPassword from "../app/auth/setNewPassword";
+import CustomerSupport from "../app/customerSupport";
+import Dashboard from "../app/dashboard";
+import FaqPage from "../app/faq";
+import LoanManagement from "../app/loanManagement";
+import LoanDetails from "../app/loanManagement/loanDetail";
+import SettingsManagement from "../app/settings";
+import UsersManagement from "../app/users";
+import Userhistory from "../app/users/history";
 const AUTH_ROUTES = [
   {
     id: 1,
@@ -123,6 +117,15 @@ const ADMIN_ROUTES = [
     inActiveIcon: <ShieldHalf size={20} color="#64748b" />,
   },
 
+  {
+    id: 4,
+    name: "Customer Support",
+    component: <CustomerSupport />,
+    exact: "exact",
+    path: "/customer-support",
+    activeIcon: <Settings size={20} color="#ffffff" />,
+    inActiveIcon: <Settings size={20} color="#64748b" />,
+  },
   {
     id: 4,
     name: "Profile",

@@ -1,7 +1,6 @@
-import React from "react";
 import { Box } from "@mui/material";
-import ProfileSection from "./components/ProfileSection";
 import PasswordSection from "./components/PasswordSection";
+import ProfileSection from "./components/ProfileSection";
 
 const SettingsManagement = () => {
   return (
