@@ -60,9 +60,9 @@ const Dashboard = () => {
       icon: <Banknote />,
     },
     {
-      title: "Disbursed Loans",
+      title: "Pending Amount",
       value: dashboardData?.totalBursedAmount || 0,
-      subtitle: "Total pending loans",
+      subtitle: "Total pending amount",
       icon: <BanknoteArrowUp />,
     },
     {

@@ -5,7 +5,8 @@ import { apiHeaders, constants } from "./endpoints";
 // export let baseUrl = "https://certano-a1437ae98176.herokuapp.com/api/";
 // export let baseUrl = "https://9zm5wcv8-3000.asse.devtunnels.ms/api/";
 // export let baseUrl = "https://1qsx0vd0-3000.inc1.devtunnels.ms/api/";
-export let baseUrl = "https://0g01d8wd-3000.inc1.devtunnels.ms/api/";
+export let baseUrl = "https://plan-a-a5157912083b.herokuapp.com/api/";
+// export let baseUrl = "https://0g01d8wd-3000.inc1.devtunnels.ms/api/";
 
 const api = async (path, params, method, formData) => {
   let userToken = localStorage.getItem("token");
@@ -29,12 +30,16 @@ const api = async (path, params, method, formData) => {
       return response;
     })
     .catch(async (error) => {
-      if (error?.response?.data?.error === "Invalid or expired token") {
-        return constants.expireTokenModal.openModal({
-          title: "Session Expired",
-          message: error?.response?.data?.error,
-        });
+      console.log(error, "errorerrorerrorerror");
+
+      if (error?.status === 401) {
+        alert("Your session has expired");
+        localStorage.removeItem("adminData");
+        localStorage.removeItem("token");
+        window.location.reload();
+        return;
       }
+
       return error.response;
     });
 };
